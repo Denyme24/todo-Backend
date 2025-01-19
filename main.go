@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
 )
@@ -33,6 +34,11 @@ func main() {
 	defer db.Close(context.Background())
 
 	app := fiber.New()
+	// Add CORS middleware
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*", // Adjust this to your Frontend origin
+		AllowHeaders: "Content-Type",
+	}))
 	PORT := os.Getenv("PORT")
 
 	app.Get("/", func(c *fiber.Ctx) error {
