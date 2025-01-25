@@ -76,6 +76,20 @@ func main() {
 	app.Patch("/todos/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		var todo Todo
+		if err := c.BodyParser(&todo); err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": "Cannot parse JSON"})
+		}
+
+		err := db.QueryRow(context.Background(), "UPDATE todos SET body = $1 WHERE id = $2 RETURNING id, completed, body", todo.Body, id).Scan(&todo.ID, &todo.Completed, &todo.Body)
+		if err != nil {
+			return c.Status(404).JSON(fiber.Map{"error": "Todo not found"})
+		}
+		return c.Status(200).JSON(todo)
+	})
+
+	app.Patch("/todos/update/:id", func(c *fiber.Ctx) error {
+		id := c.Params("id")
+		var todo Todo
 		err := db.QueryRow(context.Background(), "UPDATE todos SET completed = NOT completed WHERE id = $1 RETURNING id, completed, body", id).Scan(&todo.ID, &todo.Completed, &todo.Body)
 		if err != nil {
 			return c.Status(404).JSON(fiber.Map{"error": "Todo not found"})
